@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f9f5ff 0%, #ffffff 50%, #f9f5ff 100%);
+    min-height: 100vh;
+}
+
+.page {
+    display: none;
+    min-height: 100vh;
+}
+
+.page.active {
+    display: block;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #e9d5ff;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+
+.logo{
+    width: 130px;
+    height: 130px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+.btn-dashboard, .btn-outline {
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+}
+
+.btn-dashboard {
+    background: linear-gradient(135deg, #C77DFF, #A020F0);
+    color: white;
+}
+
+.btn-outline {
+    background: white;
+    color: #A020F0;
+    border: 2px solid #e9d5ff;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.welcome-title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.welcome-subtitle {
+    font-size: 1.25rem;
+    color: #6b7280;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e9d5ff;
+    margin-bottom: 2rem;
+}
+
+.ai-card {
+    background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
+    border: 2px solid #C77DFF;
+}
+
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mood-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: #f9fafb;
+}
+
+.mood-btn:hover {
+    background: #f3f4f6;
+    transform: scale(1.05);
+}
+
+.mood-btn.selected {
+    background: linear-gradient(135deg, #C77DFF, #A020F0);
+    color: white;
+}
+
+.mood-btn .emoji {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.mood-btn .label {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.input-label {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+}
+
+.reason-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 2px solid #e9d5ff;
+    border-radius: 12px;
+    font-size: 1rem;
+    resize: none;
+}
+
+.reason-textarea:focus {
+    outline: none;
+    border-color: #C77DFF;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #C77DFF, #A020F0);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1.125rem;
+    width: 100%;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: white;
+    color: #A020F0;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    border: 2px solid #e9d5ff;
+    font-size: 1.125rem;
+}
+
+.ai-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.ai-text {
+    font-size: 1.125rem;
+    color: #374151;
+    line-height: 1.8;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.footer-small {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .mood-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .welcome-title {
+        font-size: 2rem;
+    }
+}

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="icon" href="../../backend/logo.ico">
+    <title>EmpatIA - Termômetro Emocional</title>
+</head>
+<body>
+    <div id="homePage" class="page active">
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <img class="logo" src="../pages/img/ChatGPT_Image_12_de_nov._de_2025__11_08_04-removebg-preview.png" alt="EmpatIA">
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="welcome-section">
+                <h2 class="welcome-title">Olá, seja bem-vindo(a) a mais um dia de trabalho!</h2>
+                <p class="welcome-subtitle">Como você está se sentindo hoje?</p>
+            </div>
+
+            <div class="card">
+                <div class="mood-grid">
+                    <button class="mood-btn" data-mood="Triste">
+                        <span class="emoji">😔</span>
+                        <span class="label">Triste</span>
+                    </button>
+                    <button class="mood-btn" data-mood="Estressado">
+                        <span class="emoji">😠</span>
+                        <span class="label">Estressado</span>
+                    </button>
+                    <button class="mood-btn" data-mood="Neutro">
+                        <span class="emoji">😐</span>
+                        <span class="label">Neutro</span>
+                    </button>
+                    <button class="mood-btn" data-mood="Feliz">
+                        <span class="emoji">🙂</span>
+                        <span class="label">Feliz</span>
+                    </button>
+                    <button class="mood-btn" data-mood="Animado">
+                        <span class="emoji">😄</span>
+                        <span class="label">Animado</span>
+                    </button>
+                </div>
+
+                <div>
+                    <label class="input-label">Nos conte o motivo (opcional)</label>
+                    <textarea id="reasonInput" class="reason-textarea" placeholder="Compartilhe o que está acontecendo..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button id="submitBtn" class="btn-primary">Enviar</button>
+                    <button id="resetBtn" class="btn-secondary" style="display: none;">Limpar</button>
+                </div>
+            </div>
+
+            <div id="aiResponseCard" class="card ai-card" style="display: none;">
+                <h3 class="ai-title">🤖 EmpatIA:</h3>
+                <p id="aiResponseText" class="ai-text"></p>
+            </div>
+        </main>
+
+        <footer>
+            <p>💜 EmpatIA - Cuidando do bem-estar emocional da sua equipe</p>
+            <p class="footer-small">Todos os dados são anônimos e seguros</p>
+        </footer>
+    </div>
+
+    <div id="dashboardPage" class="page">
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">💜</div>
+                    <h1 class="logo-title">EmpatIA Dashboard</h1>
+                </div>
+                <button id="btnVoltar" class="btn-outline">Voltar</button>
+            </div>
+        </header>
+
+        <main class="container">
+            <div id="dashboardContent">
+                <h2 style="text-align: center; color: #6b7280; padding: 2rem;">
+                    Dashboard em desenvolvimento...
+                </h2>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let selectedMood = null;
+
+        function showHome() {
+            document.getElementById('homePage').classList.add('active');
+            document.getElementById('dashboardPage').classList.remove('active');
+        }
+
+        function showDashboard() {
+            document.getElementById('homePage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
+
+            // Exemplo: no futuro você pode pedir dados agregados ao Python:
+            // window.pywebview.api.get_dashboard_data().then(data => { ... })
+        }
+
+        function selectMood(mood) {
+            selectedMood = mood;
+            document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector(`[data-mood="${mood}"]`).classList.add('selected');
+            document.getElementById('resetBtn').style.display = 'block';
+        }
+
+        async function submitMood() {
+            if (!selectedMood) {
+                alert('Por favor, selecione como você está se sentindo!');
+                return;
+            }
+
+            const reason = document.getElementById('reasonInput').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            try {
+                if (!window.pywebview || !window.pywebview.api) {
+                    alert('API local não disponível. Este HTML deve ser executado pelo aplicativo EmpatIA.');
+                    return;
+                }
+
+                // 👉 CHAMA O PYTHON (API LOCAL)
+                const data = await window.pywebview.api.submit_mood({
+                    mood: selectedMood,
+                    reason: reason || null
+                });
+
+                if (!data.ok) {
+                    alert('Erro ao processar sua emoção. Tente novamente.');
+                    return;
+                }
+
+                document.getElementById('aiResponseText').textContent = data.ai_response;
+                document.getElementById('aiResponseCard').style.display = 'block';
+                document.getElementById('aiResponseCard').scrollIntoView({ behavior: 'smooth' });
+                alert('Seu humor foi registrado com sucesso!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao enviar. Tente novamente.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar';
+            }
+        }
+
+        function resetForm() {
+            selectedMood = null;
+            document.getElementById('reasonInput').value = '';
+            document.getElementById('aiResponseCard').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+        }
+
+        // ---- BIND DOS BOTÕES AO CARREGAR A PÁGINA ----
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectMood(btn.dataset.mood));
+            });
+
+            document.getElementById('submitBtn').addEventListener('click', submitMood);
+            document.getElementById('resetBtn').addEventListener('click', resetForm);
+            document.getElementById('btnDashboard').addEventListener('click', showDashboard);
+            document.getElementById('btnVoltar').addEventListener('click', showHome);
+        });
+    </script>
+</body>
+</html>

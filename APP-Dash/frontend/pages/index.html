@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>EmpatIA Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- ajuste o caminho conforme sua estrutura -->
+    <link rel="stylesheet" href="../pages/styles/styles.css">
+</head>
+
+<body>
+    <div id="loadingView" class="center-wrapper">
+        <div>
+            <div class="loader"></div>
+            <p class="loading-text">Carregando dados do EmpatIA Dashboard...</p>
+        </div>
+    </div>
+
+    <div id="dashboardView" class="page" style="display: none;">
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <img class="logo"
+                        src="../pages/img/ChatGPT_Image_12_de_nov._de_2025__11_08_04-removebg-preview copy.png"
+                        alt="EmpatIA">
+                </div>
+                <!-- Se quiser um botão de voltar, descomente:
+                <button class="btn-outline" id="btnBack">Voltar ao início</button>
+                -->
+            </div>
+        </header>
+
+        <main>
+
+            <!-- Cards principais -->
+            <section class="grid grid-3">
+                <article class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Total de Registros</h2>
+                    </div>
+                    <div class="card-content">
+                        <p id="totalEntries" class="stat-big">0</p>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Emoção Mais Frequente</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="stat-row">
+                            <span id="mostFrequentEmoji" style="font-size: 2.5rem;">😐</span>
+                            <span id="mostFrequentLabel" class="stat-label">N/A</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="card card-highlight">
+                    <div class="card-header">
+                        <h2 class="card-title">Status do Sistema</h2>
+                    </div>
+                    <div class="card-content">
+                        <p class="stat-status-main">✓ Ativo</p>
+                        <p class="stat-status-sub">Dados 100% anônimos</p>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Filtros de período -->
+            <section class="card"
+                style="margin-bottom: 1rem; display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="section-title">Período</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" data-period="daily">Diário</button>
+                    <button class="filter-btn" data-period="weekly">Semanal</button>
+                    <button class="filter-btn" data-period="monthly">Mensal</button>
+                </div>
+            </section>
+
+            <!-- Distribuição de Emoções -->
+            <section class="card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h2 class="section-title">Distribuição de Emoções</h2>
+                </div>
+                <div class="card-content" id="moodDistribution"></div>
+            </section>
+
+            <!-- Tendência (por período) -->
+            <section class="card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h2 class="section-title">Tendência no Período</h2>
+                </div>
+                <div class="card-content">
+                    <div id="weeklyTrend" class="weekly-wrapper"></div>
+                </div>
+            </section>
+
+            <!-- Recomendação da IA -->
+            <section class="card" style="
+                border-color: var(--purple-main);
+                background: radial-gradient(circle at top left, #f9f5ff, #ffffff);
+            ">
+                <div class="card-header">
+                    <h2 class="section-title" style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span style="font-size: 1.7rem;">🤖</span>
+                        Recomendação da IA para o Clima Emocional da Equipe
+                    </h2>
+                </div>
+                <div class="card-content">
+                    <p id="aiAdvice" class="ai-advice-text">
+                        Carregando recomendações...
+                    </p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>💜 EmpatIA Dashboard - Visualização de Dados Agregados</p>
+            <p>Nenhum dado individual é exibido neste dashboard</p>
+        </footer>
+    </div>
+
+    <script>
+        const moodLabels = {
+            sad: { emoji: "😔", label: "Triste", color: "#6B7280" },
+            stressed: { emoji: "😠", label: "Estressado", color: "#EF4444" },
+            neutral: { emoji: "😐", label: "Neutro", color: "#9CA3AF" },
+            happy: { emoji: "🙂", label: "Feliz", color: "#10B981" },
+            excited: { emoji: "😄", label: "Animado", color: "#F59E0B" }
+        };
+
+        function normalizeMoodKey(mood) {
+            if (!mood) return null;
+            const key = mood.toString().trim().toLowerCase();
+
+            const mapping = {
+                "feliz": "happy",
+                "happy": "happy",
+                "🙂": "happy",
+
+                "triste": "sad",
+                "sad": "sad",
+                "😔": "sad",
+
+                "estressado": "stressed",
+                "stressed": "stressed",
+                "😠": "stressed",
+
+                "neutro": "neutral",
+                "neutral": "neutral",
+                "😐": "neutral",
+
+                "animado": "excited",
+                "excited": "excited",
+                "😄": "excited"
+            };
+
+            return mapping[key] || key;
+        }
+
+        const loadingView = document.getElementById("loadingView");
+        const dashboardView = document.getElementById("dashboardView");
+        const totalEntriesEl = document.getElementById("totalEntries");
+        const mostFrequentEmojiEl = document.getElementById("mostFrequentEmoji");
+        const mostFrequentLabelEl = document.getElementById("mostFrequentLabel");
+        const moodDistributionEl = document.getElementById("moodDistribution");
+        const weeklyTrendEl = document.getElementById("weeklyTrend");
+        const aiAdviceEl = document.getElementById("aiAdvice");
+        const btnBack = document.getElementById("btnBack");
+
+        let currentPeriod = "daily"; // período inicial
+        const filterButtons = document.querySelectorAll("[data-period]");
+
+        // Voltar / fechar app (só se o botão existir)
+        if (btnBack) {
+            btnBack.addEventListener("click", () => {
+                if (window.pywebview && window.pywebview.api && window.pywebview.api.close_app) {
+                    window.pywebview.api.close_app();
+                } else {
+                    window.location.href = "../pages/index.html";
+                }
+            });
+        }
+
+        // ----------- CHAMADA AO PYWEBVIEW / PYTHON -----------
+
+        async function fetchDashboardData(period = currentPeriod) {
+            try {
+                if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.get_dashboard_data) {
+                    throw new Error("API do pywebview não está disponível.");
+                }
+
+                const stats = await window.pywebview.api.get_dashboard_data(period);
+                console.log("Stats recebidos do Python:", period, stats);
+                renderDashboard(stats);
+            } catch (err) {
+                console.error("Erro ao carregar dashboard:", err);
+                showError("Erro ao carregar dados do dashboard. Tente novamente.");
+            }
+        }
+
+        // ----------- RENDERIZAÇÃO -----------
+
+        function showError(message) {
+            loadingView.innerHTML = `
+            <div>
+                <div class="loader"></div>
+                <p class="loading-text">Não foi possível carregar os dados.</p>
+                <div class="error-box">${message}</div>
+            </div>
+            `;
+            dashboardView.style.display = "none";
+        }
+
+        function renderDashboard(stats) {
+            loadingView.style.display = "none";
+            dashboardView.style.display = "flex";
+
+            const totalEntries = stats?.total_entries || 0;
+            totalEntriesEl.textContent = totalEntries;
+
+            const rawMoodKey = stats?.most_frequent_mood;
+            const moodKey = normalizeMoodKey(rawMoodKey);
+
+            if (moodKey && moodLabels[moodKey]) {
+                mostFrequentEmojiEl.textContent = moodLabels[moodKey].emoji;
+                mostFrequentLabelEl.textContent = moodLabels[moodKey].label;
+            } else if (rawMoodKey) {
+                mostFrequentEmojiEl.textContent = "🙂";
+                mostFrequentLabelEl.textContent = rawMoodKey;
+            } else {
+                mostFrequentEmojiEl.textContent = "😐";
+                mostFrequentLabelEl.textContent = "N/A";
+            }
+
+            renderMoodDistribution(stats?.mood_counts || {}, totalEntries);
+            renderWeeklyTrend(stats?.weekly_trend || []);
+            aiAdviceEl.textContent = stats?.ai_general_advice || "Nenhuma recomendação disponível.";
+        }
+
+        function renderMoodDistribution(moodCounts, totalEntries) {
+            moodDistributionEl.innerHTML = "";
+
+            const entries = Object.entries(moodCounts);
+            if (entries.length === 0) {
+                moodDistributionEl.innerHTML =
+                    "<p style='color:#6b7280;'>Nenhum dado disponível ainda.</p>";
+                return;
+            }
+
+            entries.forEach(([mood, count]) => {
+                const normKey = normalizeMoodKey(mood);
+                const cfg = moodLabels[normKey] || {
+                    emoji: "🙂",
+                    label: mood,
+                    color: "#6366F1"
+                };
+
+                const pct = totalEntries > 0 ? (count / totalEntries) * 100 : 0;
+
+                moodDistributionEl.innerHTML += `
+                <div class="mood-row">
+                    <div class="mood-header">
+                        <div class="mood-info">
+                            <span class="mood-emoji">${cfg.emoji}</span>
+                            <span class="mood-label">${cfg.label}</span>
+                        </div>
+                        <div class="mood-count">${count} (${pct.toFixed(1)}%)</div>
+                    </div>
+                    <div class="mood-bar-bg">
+                        <div class="mood-bar-fill" style="width: ${pct}%; background: ${cfg.color};"></div>
+                    </div>
+                </div>
+                `;
+            });
+        }
+
+        function renderWeeklyTrend(weeklyTrend) {
+            weeklyTrendEl.innerHTML = "";
+
+            if (!Array.isArray(weeklyTrend) || weeklyTrend.length === 0) {
+                weeklyTrendEl.innerHTML =
+                    "<p style='color:#6b7280;'>Ainda não há dados suficientes para exibir a tendência no período selecionado.</p>";
+                return;
+            }
+
+            let maxValue = 0;
+            weeklyTrend.forEach(d => {
+                const total = d.count || 0;
+                if (total > maxValue) maxValue = total;
+            });
+
+            if (!maxValue) {
+                weeklyTrendEl.innerHTML =
+                    "<p style='color:#6b7280;'>Não há registros de humor no período selecionado.</p>";
+                return;
+            }
+
+            weeklyTrend.forEach(day => {
+                const total = day.count || 0;
+                const height = maxValue ? (total / maxValue) * 100 : 0;
+                const label = day.date?.slice(5) || day.date || "";
+
+                weeklyTrendEl.innerHTML += `
+                <div class="week-col">
+                    <div class="week-bar-container">
+                        <div class="week-bar" style="height:${Math.max(height, 6)}%;">
+                            ${total || ""}
+                        </div>
+                    </div>
+                    <span class="week-date">${label}</span>
+                </div>
+                `;
+            });
+        }
+
+        // ----------- FILTROS (BOTÕES) -----------
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const period = btn.dataset.period;
+                currentPeriod = period;
+
+                filterButtons.forEach(b => {
+                    b.classList.toggle("active", b === btn);
+                });
+
+                fetchDashboardData(currentPeriod);
+            });
+        });
+
+        // ----------- INICIALIZAÇÃO COM PYWEBVIEW -----------
+
+        function startDashboard() {
+            console.log("Iniciando dashboard com período:", currentPeriod);
+            fetchDashboardData(currentPeriod);
+        }
+
+        if (window.pywebview) {
+            startDashboard();
+        } else {
+            window.addEventListener("pywebviewready", startDashboard);
+        }
+    </script>
+
+</body>
+
+</html>
